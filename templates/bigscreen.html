@@ -8,6 +8,11 @@ body {
   background: url(static/img/ania.jpg) no-repeat center center fixed;
   background-size: cover;
   overflow: hidden;
+  color: white;
+  font-family: Helvetica;
+  font-size: 32px;
+  font-weight: bold;
+  -webkit-text-stroke: 1px hotpink;
 }
 #score {
   display: none;
@@ -15,11 +20,22 @@ body {
   top: 20px;
   left: 20px;
   width: 50%;
-  color: white;
-  font-family: Helvetica;
-  font-size: 32px;
-  font-weight: bold;
-  -webkit-text-stroke: 1px hotpink;
+}
+#answerer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 50%;
+}
+
+.blink {
+  animation: blink-animation 1.5s infinite;
+}
+@keyframes blink-animation {
+  to {
+    /* visibility: hidden; */
+    opacity: 0;
+  }
 }
   </style>
 </head>
@@ -28,6 +44,7 @@ body {
 <canvas width="600" height="400"></canvas>
 
 <div id="score"></div>
+<div id="answerer" class="blink"></div>
 
 <script>
 var images = [
@@ -121,8 +138,10 @@ ws.onmessage = function(e) {
 	    firstAnswerer = null;
 	    draw();
 	    audioWrong.play();
+	    document.getElementById('answerer').innerHTML = '';
 	  }
 	  if (cmd == 'next') {
+	    document.getElementById('answerer').innerHTML = '';
 	    ctx.fillRect(0, 0, canvas.width, canvas.height);
       if (image >= images.length - 1) {
         document.body.style.backgroundImage = 'url()';
@@ -140,6 +159,7 @@ ws.onmessage = function(e) {
 	state = 'stopped';
 	if (firstAnswerer == null) {
 	  firstAnswerer = e.data;
+	  document.getElementById('answerer').innerHTML = firstAnswerer;
 	}
 }
 ws.onerror = function(e) {
