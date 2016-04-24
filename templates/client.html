@@ -12,7 +12,7 @@
 <body>
 <form id="setup">
   <label for="user">Jak masz na imię?</label>
-  <input id="user" value="Christiaan">
+  <input id="user">
   <input type="submit" value="OK">
 </form>
 <div id="main">
@@ -44,7 +44,7 @@ document.getElementById('setup').onsubmit = function(e) {
 	document.getElementById('main').style.display = 'block';
 };
 
-var audio = new Audio('static/sound/fart.mp3');
+var audio = new Audio('static/sound/click.mp3');
 
 document.getElementById('button').onclick = function(e) {
 	if (!ws) {

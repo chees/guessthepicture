@@ -5,7 +5,7 @@
     <style>
 body {
   margin: 0;
-  background: url(static/img/cat.jpg) no-repeat center center fixed;
+  background: url(static/img/ania.jpg) no-repeat center center fixed;
   background-size: cover;
   overflow: hidden;
 }
@@ -31,11 +31,21 @@ body {
 
 <script>
 var images = [
+  'static/img/ania.jpg',
+  'static/img/keukenhof.jpg',
   'static/img/cat.jpg',
-  'static/img/dog.jpg'
+  'static/img/denhaag.jpg',
+  'static/img/krakow.jpg',
+  'static/img/kingsday.jpg',
+  'static/img/dog.jpg',
+  'static/img/lubin.jpg',
+  'static/img/paris.jpg',
+  'static/img/christiaan.jpg',
+  'static/img/scheveningen.jpg',
+  'static/img/martini.jpg'
 ];
 
-var delay = location.search.split('=')[1] || 10;
+var delay = location.search.split('=')[1] || 100;
 
 var state;
 var image;
@@ -75,6 +85,9 @@ function showScore() {
 <script>
 // TODO split up in Connection and Game parts
 
+var audioCorrect = new Audio('static/sound/correct.mp3');
+var audioWrong = new Audio('static/sound/wrong.mp3');
+
 var ws = new WebSocket('{{.}}');
 ws.onopen = function(e) {
   console.log('OPEN');
@@ -100,12 +113,14 @@ ws.onmessage = function(e) {
 	    else score[firstAnswerer] = 1;
 	    console.log(score);
 	    showScore();
+	    audioCorrect.play();
 	  }
 	  if (cmd == 'wrong') {
 	    // TODO play wrong sound
 	    state = 'drawing'
 	    firstAnswerer = null;
 	    draw();
+	    audioWrong.play();
 	  }
 	  if (cmd == 'next') {
 	    ctx.fillRect(0, 0, canvas.width, canvas.height);
