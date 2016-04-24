@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>Guess the Picture</title>
+</head>
+<body>
+<script>
+var ws = new WebSocket('{{.}}');
+ws.onopen = function(e) {
+	console.log('OPEN');
+}
+ws.onclose = function(e) {
+	console.log('CLOSE');
+	ws = null;
+}
+ws.onmessage = function(e) {
+	console.log('RESPONSE: ' + e.data);
+}
+ws.onerror = function(e) {
+	console.log('ERROR: ' + e.data);
+}
+</script>
+</body>
+</html>
