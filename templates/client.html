@@ -44,16 +44,16 @@ document.getElementById('setup').onsubmit = function(e) {
 	document.getElementById('main').style.display = 'block';
 };
 
-var audio = new Audio('static/sound/fart.ogg');
+var audio = new Audio('static/sound/fart.mp3');
 
 document.getElementById('button').onclick = function(e) {
 	if (!ws) {
 		alert('Not connected');
 		return;
 	}
+	audio.play();
 	console.log('SEND: ' + user);
 	ws.send(user);
-	audio.play();
 };
 
 </script>
