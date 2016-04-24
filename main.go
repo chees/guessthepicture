@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+var controlTempl = template.Must(template.ParseFiles("templates/control.html"))
 var bigscreenTempl = template.Must(template.ParseFiles("templates/bigscreen.html"))
 var clientTempl = template.Must(template.ParseFiles("templates/client.html"))
 
@@ -80,6 +81,10 @@ func writePump(c *websocket.Conn) {
 	}
 }
 
+func control(w http.ResponseWriter, req *http.Request) {
+	controlTempl.Execute(w, "ws://"+req.Host+"/clientws")
+}
+
 func bigscreen(w http.ResponseWriter, req *http.Request) {
 	bigscreenTempl.Execute(w, "ws://"+req.Host+"/bigscreenws")
 }
@@ -95,6 +100,7 @@ func client(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.HandleFunc("/control", control)
 	http.HandleFunc("/bigscreenws", bigscreenws)
 	http.HandleFunc("/bigscreen", bigscreen)
 	http.HandleFunc("/clientws", clientws)

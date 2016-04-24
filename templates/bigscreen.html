@@ -2,12 +2,82 @@
 <head>
     <meta charset="utf-8">
     <title>Guess the Picture</title>
+    <style>
+body {
+  margin: 0;
+  background: url(static/img/cat.jpg) no-repeat center center fixed;
+  background-size: cover;
+  overflow: hidden;
+}
+#score {
+  display: none;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 50%;
+  color: white;
+  font-family: Helvetica;
+  font-size: 32px;
+  font-weight: bold;
+  -webkit-text-stroke: 1px hotpink;
+}
+  </style>
 </head>
 <body>
+
+<canvas width="600" height="400"></canvas>
+
+<div id="score"></div>
+
 <script>
+var images = [
+  'static/img/cat.jpg',
+  'static/img/dog.jpg'
+];
+
+var delay = location.search.split('=')[1] || 10;
+
+var state;
+var image;
+var firstAnswerer;
+var score;
+
+var canvas = document.querySelector('canvas')
+canvas.width = document.body.scrollWidth;
+canvas.height = document.body.scrollHeight;
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = '#000000';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+function draw() {
+  for (var i = 0; i < 5; i++) {
+    ctx.clearRect(
+      Math.floor(Math.random() * canvas.width),
+      Math.floor(Math.random() * canvas.height),
+      Math.floor(Math.random() * 25),
+      Math.floor(Math.random() * 25));
+  }
+  if (state == 'drawing') {
+    setTimeout(draw, delay);
+  }
+}
+
+function showScore() {
+  var el = document.getElementById('score');
+  el.innerHTML = '';
+  Object.keys(score).forEach(function(key) {
+    el.innerHTML += key + ': ' + score[key] + '<br>';
+  });
+  el.style.display = 'block';
+}
+
+</script>
+<script>
+// TODO split up in Connection and Game parts
+
 var ws = new WebSocket('{{.}}');
 ws.onopen = function(e) {
-	console.log('OPEN');
+  console.log('OPEN');
 }
 ws.onclose = function(e) {
 	console.log('CLOSE');
@@ -15,6 +85,47 @@ ws.onclose = function(e) {
 }
 ws.onmessage = function(e) {
 	console.log('MESSAGE: ' + e.data);
+	if (e.data.startsWith('_CONTROL ')) {
+	  var cmd = e.data.substr(9);
+	  if (cmd == 'start') {
+	    state = 'drawing'
+	    image = 0;
+	    firstAnswerer = null;
+	    score = {};
+      draw();
+	  }
+	  if (cmd == 'correct') {
+	    ctx.clearRect(0, 0, canvas.width, canvas.height);
+	    if (score[firstAnswerer]) score[firstAnswerer]++;
+	    else score[firstAnswerer] = 1;
+	    console.log(score);
+	    showScore();
+	  }
+	  if (cmd == 'wrong') {
+	    // TODO play wrong sound
+	    state = 'drawing'
+	    firstAnswerer = null;
+	    draw();
+	  }
+	  if (cmd == 'next') {
+	    ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (image >= images.length - 1) {
+        document.body.style.backgroundImage = 'url()';
+        return;
+      }
+      document.getElementById('score').style.display = 'none';
+      image++;
+      document.body.style.backgroundImage = 'url(' + images[image] + ')';
+      state = 'drawing';
+      firstAnswerer = null;
+      draw();
+	  }
+	  return;
+	}
+	state = 'stopped';
+	if (firstAnswerer == null) {
+	  firstAnswerer = e.data;
+	}
 }
 ws.onerror = function(e) {
 	console.log('ERROR: ' + e.data);
