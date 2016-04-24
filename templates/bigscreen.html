@@ -14,7 +14,7 @@ ws.onclose = function(e) {
 	ws = null;
 }
 ws.onmessage = function(e) {
-	console.log('RESPONSE: ' + e.data);
+	console.log('MESSAGE: ' + e.data);
 }
 ws.onerror = function(e) {
 	console.log('ERROR: ' + e.data);

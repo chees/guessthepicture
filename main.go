@@ -5,29 +5,31 @@ import (
 	"net/http"
 	"github.com/gorilla/websocket"
 	"html/template"
+	"time"
 )
 
 var bigscreenTempl = template.Must(template.ParseFiles("templates/bigscreen.html"))
 var clientTempl = template.Must(template.ParseFiles("templates/client.html"))
 
 var upgrader = websocket.Upgrader{}
-var bigConn *websocket.Conn
+var sendBuffer = make(chan string, 64)
 
 func bigscreenws(w http.ResponseWriter, r *http.Request) {
-	bigConn, err := upgrader.Upgrade(w, r, nil)
+	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
 	}
-	defer bigConn.Close()
+	defer c.Close()
+	go writePump(c)
 	for {
-		mt, message, err := bigConn.ReadMessage()
+		mt, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			break
 		}
 		log.Printf("recv: %s", message)
-		err = bigConn.WriteMessage(mt, []byte("OK"))
+		err = c.WriteMessage(mt, []byte("OK"))
 		if err != nil {
 			log.Println("write:", err)
 			break
@@ -43,21 +45,37 @@ func clientws(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 	for {
-		mt, message, err := c.ReadMessage()
+		_, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			break
 		}
 		log.Printf("recv: %s", message)
-		err = bigConn.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-		err = c.WriteMessage(mt, []byte("OK"))
-		if err != nil {
-			log.Println("write:", err)
-			break
+		sendBuffer <- string(message[:])
+	}
+}
+
+// writePump pumps messages from the clients to the bigscreen connection.
+func writePump(c *websocket.Conn) {
+	ticker := time.NewTicker(1 * time.Second)
+	defer func() {
+		ticker.Stop()
+		c.Close()
+	}()
+	for {
+		select {
+		case message, ok := <-sendBuffer:
+			if !ok {
+				c.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			if err := c.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+				return
+			}
+		case <-ticker.C:
+			if err := c.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				return
+			}
 		}
 	}
 }
